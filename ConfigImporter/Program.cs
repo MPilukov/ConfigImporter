@@ -54,7 +54,7 @@ namespace ConfigImporter
             
             while (string.IsNullOrEmpty(_currentStage))
             {
-                Console.Write($"Введите текущий мир для импорта ({allowableStagesValue}) :");
+                Console.Write($"Введите текущий мир для импорта ({allowableStagesValue}) : ");
                 var stage = Console.ReadLine();
                 if (!_allowableStages.Any(x => x.Equals(stage)))
                 {
