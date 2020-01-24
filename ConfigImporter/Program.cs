@@ -34,11 +34,11 @@ namespace ConfigImporter
             
             if (string.IsNullOrEmpty(_fileName))
             {
-                throw new Exception("Не указано имя файла для импорта.");
+                throw new Exception("Не указано имя файла для импорта");
             }
             if (string.IsNullOrEmpty(_fileExt))
             {
-                throw new Exception("Не указано расширение файла для импорта.");
+                throw new Exception("Не указано расширение файла для импорта");
             }
         }
 
@@ -49,7 +49,7 @@ namespace ConfigImporter
             
             if (string.IsNullOrEmpty(allowableStagesValue) || !_allowableStages.Any())
             {
-                throw new Exception("Не указаны допустимые миры для импорта.");
+                throw new Exception("Не указаны допустимые миры для импорта");
             }
             
             while (string.IsNullOrEmpty(_currentStage))
@@ -58,7 +58,7 @@ namespace ConfigImporter
                 var stage = Console.ReadLine();
                 if (!_allowableStages.Any(x => x.Equals(stage)))
                 {
-                    Console.WriteLine($"Не найден мир {stage} в списке доступимых для импорта : ({allowableStagesValue})");
+                    Console.WriteLine($"Не найден мир '{stage}' в списке доступимых для импорта : {allowableStagesValue}.");
                 }
                 else
                 {
@@ -75,11 +75,11 @@ namespace ConfigImporter
             
             if (string.IsNullOrEmpty(_sdUrl))
             {
-                throw new Exception($"Не указан адрес консула для мира : {_currentStage}.");
+                throw new Exception($"Не указан адрес консула для мира : {_currentStage}");
             }
             if (string.IsNullOrEmpty(_sdPrefix))
             {
-                throw new Exception($"Не указан префикс для консула для мира : {_currentStage}.");
+                throw new Exception($"Не указан префикс для консула для мира : {_currentStage}");
             }
         }
 
@@ -106,18 +106,23 @@ namespace ConfigImporter
                     ? GetValuesFromFile(fileStagePath)
                     : new Dictionary<string, string>();
 
-                InitConfigs(valuesForImport, valuesStageForImport);
-                Console.WriteLine($"Успешно импортировали конфиги в консул ({_sdUrl}{_sdPrefix}).");
+                try
+                {
+                    InitConfigs(valuesForImport, valuesStageForImport);
+                    Console.WriteLine($"Успешно импортировали конфиги в консул ({_sdUrl}{_sdPrefix}).");
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"Произошла ошибка при импортировании конфигов в консул ({_sdUrl}{_sdPrefix}) : {e.Message}.", e);
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw new Exception(
-                    $"Произошла ошибка при импортировании конфигов в консул ({_sdUrl}{_sdPrefix}) : {e.Message}.", e);
+                Console.WriteLine($"Произошла ошибка при импортировании конфигов в консул : {e.Message}.", e);
             }
 
             Console.WriteLine($"Нажмите любую кнопку для завершения.");
-            Console.ReadKey();
+            Console.ReadLine();
         }
 
         private static Dictionary<string, string> GetValuesFromFile(string filePath)
