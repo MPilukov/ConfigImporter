@@ -156,6 +156,16 @@ namespace ConfigImporter
                 values.Add(data.Key,
                     valuesStageForImport.TryGetValue(data.Key, out var stageValue) ? stageValue : data.Value);
             }
+
+            foreach (var data in valuesStageForImport)
+            {
+                if (values.ContainsKey(data.Key))
+                {
+                    continue;
+                }
+
+                values.Add(data.Key, data.Value);
+            }
                 
             ImportToSd(values);
         }
