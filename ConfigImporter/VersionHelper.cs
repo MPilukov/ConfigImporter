@@ -36,7 +36,9 @@ namespace ConfigImporter
 
         private async Task Update(TagData data)
         {
-            await Update(data);
+            var dll = "https://github.com/MPilukov/ConfigImporter/raw/master/ConfigImporterExecuter/build/ConfigImporterExecuter.dll";
+            var pdb = "https://github.com/MPilukov/ConfigImporter/raw/master/ConfigImporterExecuter/build/ConfigImporterExecuter.pdb";
+
 
             SaveVersion(data.Name);
         }
