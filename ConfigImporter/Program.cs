@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Threading.Tasks;
 
 namespace ConfigImporter
 {
@@ -23,10 +24,13 @@ namespace ConfigImporter
             return value;
         }
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             try
             {
+                var x = new VersionHelper();
+                await x.CheckUpdate();
+
                 var getConfig = new Func<string, string>(s => ConfigurationManager.AppSettings[s]);
                 ConfigImporterExecuter.ConfigImporterExecuter.Run(getConfig);
             }
