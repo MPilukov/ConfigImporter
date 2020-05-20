@@ -12,19 +12,9 @@ namespace ConfigImporter
             try
             {
                 var x = new VersionHelper();
-                await x.CheckUpdate();
+                await x.CheckUpdate(s=> Console.WriteLine(s + Environment.NewLine));
 
-                var getConfig = new Func<string, string>(s => ConfigurationManager.AppSettings[s]);
-
-                var currentPath = Directory.GetCurrentDirectory();
-
-                var assembly = System.Reflection.Assembly.LoadFile($"{currentPath}/ConfigImporterExecuter.dll");
-                var type = assembly.GetType("ConfigImporterExecuter.ConfigImporterExecuter");
-                var methodInfo = type.GetMethod("Run");
-                methodInfo.Invoke(null, new object[] { getConfig });
-
-                var instance = Activator.CreateInstance(type);
-
+                StartExecuter();
                 //ConfigImporterExecuter.ConfigImporterExecuter.Run(getConfig);
             }
             catch (Exception e)
@@ -33,6 +23,20 @@ namespace ConfigImporter
             }
 
             Console.ReadLine();
+        }
+
+        private static void StartExecuter()
+        {
+            var getConfig = new Func<string, string>(s => ConfigurationManager.AppSettings[s]);
+
+            var currentPath = Directory.GetCurrentDirectory();
+
+            var assembly = System.Reflection.Assembly.LoadFile($"{currentPath}/ConfigImporterExecuter.dll");
+            var type = assembly.GetType("ConfigImporterExecuter.ConfigImporterExecuter");
+            var methodInfo = type.GetMethod("Run");
+            methodInfo.Invoke(null, new object[] { getConfig });
+
+            var instance = Activator.CreateInstance(type);
         }
     }
 }

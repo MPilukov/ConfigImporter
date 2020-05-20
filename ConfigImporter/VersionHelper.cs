@@ -10,7 +10,7 @@ namespace ConfigImporter
 {
     public class VersionHelper
     {
-        public async Task CheckUpdate()
+        public async Task CheckUpdate(Action<string> trace)
         {
             try
             {
@@ -22,16 +22,19 @@ namespace ConfigImporter
                     return;
                 }
 
-                if (string.IsNullOrWhiteSpace(currectVesion) 
+                if (lastVersion == null
+                    || string.IsNullOrWhiteSpace(currectVesion) 
                     || !currectVesion.Equals(lastVersion.Name, StringComparison.InvariantCultureIgnoreCase))
                 {
+                    trace($"Необходимо обновиться на более свежую версию : {lastVersion.Name}");
                     await Update(lastVersion);
+                    trace($"Успешно обновились на более свежую версию : {lastVersion.Name}");
                 }
 
             }
             catch (Exception exc)
             {
-                Console.WriteLine($"CheckUpdate : {exc}");
+                trace($"CheckUpdateException : {exc}");
             }
         }
 
@@ -66,26 +69,25 @@ namespace ConfigImporter
             SaveVersion(data.Name);
         }
 
-        string _versionFileName = "currentVersion.txt";
+        private const string VersionFileName = "currentVersion.txt";
 
         private void SaveVersion(string version)
         {
-            File.WriteAllText(_versionFileName, version);
+            File.WriteAllText(VersionFileName, version);
         }
 
         private string GetVersion()
         {
-            if (File.Exists(_versionFileName))
+            if (File.Exists(VersionFileName))
             {
-                return File.ReadAllText(_versionFileName);
+                return File.ReadAllText(VersionFileName);
             }
 
             return null;
         }
 
         private async Task<TagData> GetLastVersion()
-        {
-            
+        {            
             var url = "https://api.github.com/repos/MPilukov/ConfigImporter/tags";
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 
