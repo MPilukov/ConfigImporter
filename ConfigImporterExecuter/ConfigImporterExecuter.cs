@@ -144,8 +144,6 @@ namespace ConfigImporterExecuter
         {
             try
             {
-                Logger($"Внимание, этот текст волшебный теперь обновился и даже пропадет. ", ELogLevel.Info);
-
                 GetConfigData = getConfig;
 
                 Logger($"Запускаем импорт в консул", ELogLevel.Info);
