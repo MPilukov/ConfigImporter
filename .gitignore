@@ -5,35 +5,18 @@ packages
 obj
 .vs
 .vscode
-XrmToolBox
 *.suo
-*.dll
 *.pdb
 *.exe
 *.user
-CRMDeveloperExtensions.config
 *.TestConsole
 *.js.map
 .rdl.data
 .idea
 *.dbmdl
 *.csproj.user
-/Build
-/Web Resources/Web Resources/Root/dfs_common.actionStarter.js
-/Web Resources/Web Resources/Root/dfs_/CallCentre/ButtonCall.js
-/Web Resources/Web Resources/Root/dfs_/Account/CloseRefuse.js
-/Web Resources/Web Resources/Root/dfs_/CallRegistration/Logic.js
-/Web Resources/Web Resources/mocks.js
-/Web Resources/Web Resources/Root/dfs_methods.js
-/Web Resources/Web Resources/Root/dfs_/Account/OkvedSync/run.js
-/Web Resources/Web Resources/Root/dfs_/Activities/AssignToMe.js
+*.dll
+!ConfigImporterExecuter/build/ConfigImporterExecuter.dll
+!ConfigImporterExecuter/build/ConfigImporterExecuter.pdb
 
-/Web Resources/Web Resources/Root/dfs_/CallCentre/QueueProcessor/Logic.js
-/Web Resources/Web Resources/Root/dfs_/CallCentre/QueueProcessor/Init.js
-/Web Resources/Web Resources/Root/dfs_/Common/Methods.js
-/Helpers/ResharperSettings.DotSettings
-/Web Resources/Web Resources/Root/dfs_/Common/Linq.js
-/Web Resources/Web Resources/Root/dfs_/CallRegistration/AdjustRecallTime.js
-/Web Resources/Web Resources/Root/dfs_/Common/linq.js
-/Web Resources/Web Resources/Definitions/mocks.js
-/Web Resources/Web Resources/Root/dfs_/ImportJob/StartImport.js
+/Build
