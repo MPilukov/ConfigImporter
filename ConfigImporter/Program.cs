@@ -13,18 +13,17 @@ namespace ConfigImporter
             {
                 var x = new VersionHelper();
                 await x.CheckUpdate(s=> Console.WriteLine(s + Environment.NewLine));
+                var version = x.GetVersion();
 
-                StartExecuter();
+                StartExecuter(version);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Ошибка при запуске импорта : {e}");
             }
-
-            Console.ReadLine();
         }
 
-        private static void StartExecuter()
+        private static void StartExecuter(string version)
         {
             var getConfig = new Func<string, string>(s => ConfigurationManager.AppSettings[s]);
 
@@ -33,7 +32,7 @@ namespace ConfigImporter
             var assembly = System.Reflection.Assembly.LoadFile($"{currentPath}/ConfigImporterExecuter.dll");
             var type = assembly.GetType("ConfigImporterExecuter.ConfigImporterExecuter");
             var methodInfo = type.GetMethod("Run");
-            methodInfo.Invoke(null, new object[] { getConfig });
+            methodInfo.Invoke(null, new object[] { getConfig, version });
         }
     }
 }

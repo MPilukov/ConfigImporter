@@ -140,10 +140,12 @@ namespace ConfigImporterExecuter
         }
 
         private static Func<string, string> GetConfigData;
-        public static void Run(Func<string, string> getConfig)
+        public static void Run(Func<string, string> getConfig, string version)
         {
             try
             {
+                Logger($"Текущая версия : {version}", ELogLevel.Info);
+
                 GetConfigData = getConfig;
 
                 Logger($"Запускаем импорт в консул", ELogLevel.Info);
