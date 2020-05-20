@@ -75,7 +75,6 @@ namespace ConfigImporter
         {
             File.WriteAllText(VersionFileName, version);
         }
-
         public string GetVersion()
         {
             if (File.Exists(VersionFileName))
