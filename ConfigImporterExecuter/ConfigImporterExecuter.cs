@@ -144,7 +144,7 @@ namespace ConfigImporterExecuter
         {
             try
             {
-                Logger($"Внимание, этот текст волшебный. ", ELogLevel.Info);
+                Logger($"Внимание, этот текст волшебный теперь обновился и даже пропадет. ", ELogLevel.Info);
 
                 GetConfigData = getConfig;
 
