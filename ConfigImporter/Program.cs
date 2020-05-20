@@ -15,7 +15,6 @@ namespace ConfigImporter
                 await x.CheckUpdate(s=> Console.WriteLine(s + Environment.NewLine));
 
                 StartExecuter();
-                //ConfigImporterExecuter.ConfigImporterExecuter.Run(getConfig);
             }
             catch (Exception e)
             {
@@ -35,8 +34,6 @@ namespace ConfigImporter
             var type = assembly.GetType("ConfigImporterExecuter.ConfigImporterExecuter");
             var methodInfo = type.GetMethod("Run");
             methodInfo.Invoke(null, new object[] { getConfig });
-
-            var instance = Activator.CreateInstance(type);
         }
     }
 }

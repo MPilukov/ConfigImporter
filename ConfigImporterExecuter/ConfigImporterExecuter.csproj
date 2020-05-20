@@ -57,9 +57,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="obj\Debug\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="build\ConfigImporterExecuter.dll" />
     <Content Include="build\ConfigImporterExecuter.pdb" />
