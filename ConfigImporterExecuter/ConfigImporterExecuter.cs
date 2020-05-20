@@ -140,11 +140,11 @@ namespace ConfigImporterExecuter
         }
 
         private static Func<string, string> GetConfigData;
-        public static void Run(Func<string, string> getConfig, string version)
+        public static void Run(Func<string, string> getConfig)
         {
             try
             {
-                Logger($"Текущая версия : {version}", ELogLevel.Info);
+                Logger($"Внимание, этот текст волшебный. ", ELogLevel.Info);
 
                 GetConfigData = getConfig;
 
