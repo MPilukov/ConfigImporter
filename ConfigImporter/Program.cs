@@ -24,7 +24,7 @@ namespace ConfigImporter
                 case LogLevel.Success:
                     return ConsoleColor.Green;
                 case LogLevel.Warning:
-                    return ConsoleColor.Blue;
+                    return ConsoleColor.Yellow;
                 default:
                     return ConsoleColor.White;
             }
