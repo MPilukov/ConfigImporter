@@ -43,7 +43,7 @@ namespace ConfigImporter
 
             if (string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(keyNameForError))
             {
-                throw new Exception($"Не указано : {keyNameForError}");
+                throw new Exception($"Не указано в конфигах : {keyNameForError} ({key})");
             }
 
             return value;
