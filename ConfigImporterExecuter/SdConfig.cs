@@ -1,4 +1,4 @@
-﻿namespace ConfigImporter
+﻿namespace ConfigImporterLogic
 {
     public class SdConfig
     {
