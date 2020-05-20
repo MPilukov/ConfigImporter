@@ -12,152 +12,192 @@ namespace ConfigImporter
 {
     internal class Program
     {
-        private static string _sdUrl;
-        private static string _sdPrefix;
-        private static string _sdToken;
-        private static string _fileName;
-        private static string _fileExt;
-        private static string[] _allowableStages;
-
-        private const string SdUrlKey = "sd.address";
-        private const string SdPrefixKey = "sd.prefix";
-        private const string SdTokenKey = "sd.token";
-        private const string FileNameKey = "fileConfig.base.fileName";
-        private const string FileExtKey = "fileConfig.base.ext";
-        private const string AllowableStagesKey = "allowableStages";
-        private static string _currentStage = "";
-
-        private static void GetFileData()
+        private static readonly Action<string, LogLevel> Logger = GetLogger();
+        private static ConsoleColor GetConsoleColor(LogLevel level)
         {
-            _fileName = ConfigurationManager.AppSettings[FileNameKey];
-            _fileExt = ConfigurationManager.AppSettings[FileExtKey];
-            
-            if (string.IsNullOrEmpty(_fileName))
+            switch (level)
             {
-                throw new Exception("Не указано имя файла для импорта");
-            }
-            if (string.IsNullOrEmpty(_fileExt))
-            {
-                throw new Exception("Не указано расширение файла для импорта");
+                case LogLevel.Error:
+                    return ConsoleColor.Red;
+                case LogLevel.Info:
+                    return ConsoleColor.White;
+                case LogLevel.Success:
+                    return ConsoleColor.Green;
+                case LogLevel.Warning:
+                    return ConsoleColor.Yellow;
+                default:
+                    return ConsoleColor.White;
             }
         }
 
-        private static void GetCurrentStage()
+        private static void LogToConsole(string message, LogLevel level)
         {
-            var allowableStagesValue = ConfigurationManager.AppSettings[AllowableStagesKey];
-            _allowableStages = (allowableStagesValue ?? "").Split(',');
+            var color = GetConsoleColor(level);
+            if (Console.ForegroundColor != color)
+            {
+                Console.ForegroundColor = color;
+            }
+
+            Console.WriteLine(message);
+        }
+
+        private static Action<string, LogLevel> GetLogger()
+        {
+            return new Action<string, LogLevel>((s, l) =>
+            {
+                try
+                {
+                    LogToConsole(s, l);
+
+                    var dirName = "logs";
+                    var logFileName = $"{dirName}/log-{DateTime.Today.ToShortDateString()}.txt";
+                    var now = DateTime.Now.ToString("HH:mm:ss");
+
+                    if (!Directory.Exists(dirName))
+                    {
+                        Directory.CreateDirectory(dirName);
+                    }
+
+                    File.AppendAllText(logFileName, $"{now} : {s}{Environment.NewLine}");
+                }
+                catch (Exception exc)
+                {
+                    LogToConsole(s, l);
+                    LogToConsole($"При записи лога произошла ошибка : {exc}", LogLevel.Error);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Получить значение ключа из appConfig и выбросить исключение, если его не найдено и задано имя ключа
+        /// </summary>
+        /// <param name="key">ключ</param>
+        /// <param name="keyNameForError">имя ключа для проброса ошибки</param>
+        /// <returns></returns>
+        private static string GetConfig(string key, string keyNameForError = null)
+        {
+            var value = ConfigurationManager.AppSettings[key];
+
+            if (string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(keyNameForError))
+            {
+                throw new Exception($"Не указано в конфигах : {keyNameForError} ({key})");
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Получить имя среды от пользователя (из списка допустимых сред)
+        /// </summary>
+        /// <returns></returns>
+        private static string GetCurrentStage()
+        {
+            var allowableStagesValue = GetConfig("allowableStages", "допустимые миры для импорта");
+            var allowableStages = allowableStagesValue.Split(',');
             
-            if (string.IsNullOrEmpty(allowableStagesValue) || !_allowableStages.Any())
+            if (!allowableStages.Any())
             {
                 throw new Exception("Не указаны допустимые миры для импорта");
             }
-            
-            while (string.IsNullOrEmpty(_currentStage))
+
+            var currentStage = "";
+            while (string.IsNullOrEmpty(currentStage))
             {
-                Console.Write($"Введите текущий мир для импорта ({allowableStagesValue}) : ");
+                Logger($"Введите текущий мир для импорта ({allowableStagesValue}) : ", LogLevel.Info);
+
                 var stage = Console.ReadLine();
-                if (!_allowableStages.Any(x => x.Equals(stage)))
+                if (!allowableStages.Any(x => x.Equals(stage)))
                 {
-                    Console.WriteLine($"Не найден мир '{stage}' в списке доступимых для импорта : {allowableStagesValue}.");
+                    Logger($"Не найден мир '{stage}' в списке доступимых для импорта : {allowableStagesValue}", LogLevel.Error);
                 }
                 else
                 {
-                    _currentStage = stage;
+                    currentStage = stage;
                 }
             }
+
+            return currentStage;
         }
 
-        private static void GetSdConfigs()
+        /// <summary>
+        /// Получить настройки подключения к консулу
+        /// </summary>
+        /// <param name="currentStage"></param>
+        /// <returns></returns>
+        private static SdConfig GetSdConfigs(string currentStage)
         {
-            _sdUrl = ConfigurationManager.AppSettings[$"{SdUrlKey}.{_currentStage}"];
-            _sdPrefix = ConfigurationManager.AppSettings[$"{SdPrefixKey}.{_currentStage}"];
-            _sdToken = ConfigurationManager.AppSettings[$"{SdTokenKey}.{_currentStage}"];
-            
-            if (string.IsNullOrEmpty(_sdUrl))
+            var sdUrl = GetConfig($"sd.address.{currentStage}", $"адрес консула для мира : {currentStage}");
+            var sdPrefix = GetConfig($"sd.prefix.{currentStage}", $"префикс в консуле для мира : {currentStage}");
+            var sdToken = GetConfig($"sd.token.{currentStage}");
+
+            return new SdConfig
             {
-                throw new Exception($"Не указан адрес консула для мира : {_currentStage}");
-            }
-            if (string.IsNullOrEmpty(_sdPrefix))
-            {
-                throw new Exception($"Не указан префикс для консула для мира : {_currentStage}");
-            }
+                Url = sdUrl,
+                Prefix = sdPrefix,
+                Token = sdToken,
+            };
         }
 
         public static void Main(string[] args)
         {
             try
             {
-                Console.WriteLine($"Запускаем импорт в консул.");
+                Logger($"Запускаем импорт в консул", LogLevel.Info);
 
-                GetFileData();
-                GetCurrentStage();
-                GetSdConfigs();
+                var fileForImportName = GetConfig("fileConfig.base.fileName", "имя файла для импорта");
+                var fileForImportExt = GetConfig("fileConfig.base.ext", "расширение файла для импорта");
 
-                var filePath = $"{_fileName}.{_fileExt}";
-                if (!File.Exists(filePath))
-                {
-                    throw new Exception($"Не найден файл {filePath}.");
-                }
+                var showValues = GetConfig("showValuesToClient", "разрешение демонстрировать значения параметров для импорта")
+                    .Equals("true", StringComparison.InvariantCultureIgnoreCase);
 
-                var valuesForImport = GetValuesFromFile(filePath);
+                var currentStage = GetCurrentStage();
+                var sdConfig = GetSdConfigs(currentStage);
 
-                var fileStagePath = $"{_fileName}.{_currentStage}.{_fileExt}";
-                var valuesStageForImport = File.Exists(fileStagePath)
-                    ? GetValuesFromFile(fileStagePath)
-                    : new Dictionary<string, string>();
+                var valuesForImport = GetValuesForImport(fileForImportName, fileForImportExt, currentStage);
 
                 try
                 {
-                    InitConfigs(valuesForImport, valuesStageForImport);
-                    Console.WriteLine($"Успешно импортировали конфиги в консул ({_sdUrl}{_sdPrefix}).");
+                    ImportToSd(sdConfig, valuesForImport, showValues);
+                    Logger($"Успешно импортировали конфиги в консул ({sdConfig.Url}{sdConfig.Prefix})", LogLevel.Success);
                 }
                 catch (Exception e)
                 {
-                    throw new Exception($"Произошла ошибка при импортировании конфигов в консул ({_sdUrl}{_sdPrefix}) : {e.Message}.", e);
+                    throw new Exception($"Произошла ошибка при импортировании конфигов в консул ({sdConfig.Url}{sdConfig.Prefix}) : {e.Message}", e);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Произошла ошибка при импортировании конфигов в консул : {e.Message}.", e);
+                Logger($"Произошла ошибка при импортировании конфигов в консул : {e}", LogLevel.Error);
             }
 
-            Console.WriteLine($"Нажмите любую кнопку для завершения.");
+            Logger($"Нажмите любую кнопку для завершения", LogLevel.Info);
             Console.ReadLine();
         }
 
-        private static Dictionary<string, string> GetValuesFromFile(string filePath)
+        /// <summary>
+        /// Получить набор параметров для импорта в консул
+        /// </summary>
+        /// <param name="fileForImportName"></param>
+        /// <param name="fileForImportExt"></param>
+        /// <param name="currentStage"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetValuesForImport(string fileForImportName, string fileForImportExt, string currentStage)
         {
-            Dictionary<string, string> values;
+            var baseFilePathForImport = $"{fileForImportName}.{fileForImportExt}";
+            var stageFilePathForImport = $"{fileForImportName}.{currentStage}.{fileForImportExt}";
 
-            try
+            if (!File.Exists(baseFilePathForImport))
             {
-                var fileText = File.ReadAllText(filePath);
-                values = JsonConvert.DeserializeObject<Dictionary<string, string>>(fileText);
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"Произошла ошибка при чтении конфигов из файла ({filePath}).", e);
+                throw new Exception($"Не найден файл {baseFilePathForImport}");
             }
 
-            return values;
-        }
+            var baseValuesForImport = GetValuesFromFile(baseFilePathForImport);
+            var stageValuesForImport = GetValuesFromFile(stageFilePathForImport);
 
-        private static void InitConfigs(Dictionary<string, string> valuesForImport, IReadOnlyDictionary<string, string> valuesStageForImport)
-        {
             var values = new Dictionary<string, string>();
-        
-            foreach (var data in valuesForImport)
-            {
-                if (values.ContainsKey(data.Key))
-                {
-                    continue;
-                }
 
-                values.Add(data.Key,
-                    valuesStageForImport.TryGetValue(data.Key, out var stageValue) ? stageValue : data.Value);
-            }
-
-            foreach (var data in valuesStageForImport)
+            // заполняем набор значениями по-умолчанию (для всех сред)
+            foreach (var data in baseValuesForImport)
             {
                 if (values.ContainsKey(data.Key))
                 {
@@ -166,32 +206,89 @@ namespace ConfigImporter
 
                 values.Add(data.Key, data.Value);
             }
-                
-            ImportToSd(values);
+
+            // переопределяем значения по-умолчанию на конкретные для этой среды
+            foreach (var data in stageValuesForImport)
+            {
+                if (values.ContainsKey(data.Key))
+                {
+                    values[data.Key] = data.Value;
+                }
+                else
+                {
+                    values.Add(data.Key, data.Value);
+                }
+            }
+
+            return values;
         }
 
-        private static void ImportToSd(Dictionary<string, string> values)
+        /// <summary>
+        /// Получить словарь значений из файла
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetValuesFromFile(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    return new Dictionary<string, string>();
+                }
+
+                var fileText = File.ReadAllText(filePath);
+                var values = JsonConvert.DeserializeObject<Dictionary<string, string>>(fileText);
+                return values;
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Произошла ошибка при чтении конфигов из файла ({filePath})", e);
+            }
+        }
+
+        /// <summary>
+        /// Отправить в консул набор параметров
+        /// </summary>
+        /// <param name="sdConfig"></param>
+        /// <param name="values"></param>
+        private static void ImportToSd(SdConfig sdConfig, Dictionary<string, string> values, bool showValues)
         {
             void ConfigurationWithToken(ConsulClientConfiguration config)
             {
-                config.Address = new Uri(_sdUrl);
-                config.Token = _sdToken;
+                config.Address = new Uri(sdConfig.Url);
+                config.Token = sdConfig.Token;
             }
 
             void ConfigurationWithoutToken(ConsulClientConfiguration config)
             {
-                config.Address = new Uri(_sdUrl);
+                config.Address = new Uri(sdConfig.Url);
             }
 
-            using (var client = new ConsulClient(string.IsNullOrWhiteSpace(_sdToken) ? (Action<ConsulClientConfiguration>) ConfigurationWithoutToken : ConfigurationWithToken))
+            using (var client = new ConsulClient(string.IsNullOrWhiteSpace(sdConfig.Token) 
+                ? (Action<ConsulClientConfiguration>) ConfigurationWithoutToken 
+                : ConfigurationWithToken))
             {
                 foreach (var pair in values)
                 {
                     var kv = client.KV;
-                    var p = new KVPair(_sdPrefix + "/" + pair.Key) {Value = Encoding.UTF8.GetBytes(pair.Value)};
+                    var p = new KVPair(sdConfig.Prefix + "/" + pair.Key) {Value = Encoding.UTF8.GetBytes(pair.Value)};
                     var ct = new CancellationToken();
                     kv.Put(p, ct).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                    if (showValues)
+                    {
+                        Logger($"'{pair.Key}' = '{pair.Value}'", LogLevel.Info);
+                    }
                 }
+            }
+
+            if (showValues)
+            {
+                Logger("Внимание! Обратите внимание, что вы выбрали конфигурацию, в которой все параметры, импортируемые в консул, сохраняются в логи", 
+                    LogLevel.Warning);
+                Logger("Если вы переживаете за сохранность этих параметров, то рекомендуется очистить папку логов после завершения работы", 
+                    LogLevel.Warning);
             }
         }
     }
