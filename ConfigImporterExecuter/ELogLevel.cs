@@ -1,6 +1,6 @@
-﻿namespace ConfigImporter
+﻿namespace ConfigImporterLogic
 {
-    public enum LogLevel
+    public enum ELogLevel
     {
         Info,
         Warning,
