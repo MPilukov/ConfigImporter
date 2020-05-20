@@ -32,7 +32,7 @@ namespace ConfigImporter
             var assembly = System.Reflection.Assembly.LoadFile($"{currentPath}/ConfigImporterExecuter.dll");
             var type = assembly.GetType("ConfigImporterExecuter.ConfigImporterExecuter");
             var methodInfo = type.GetMethod("Run");
-            methodInfo.Invoke(null, new object[] { getConfig, version });
+            methodInfo.Invoke(null, new object[] { getConfig });
         }
     }
 }
