@@ -13,14 +13,13 @@ namespace ConfigImporter
     internal class Program
     {
         private static readonly Action<string> Logger = GetLogger();
-
         private static Action<string> GetLogger()
         {
-            var logFileName = $"logs/log-{DateTime.Today.ToShortDateString()}.txt";
             return new Action<string>(s =>
             {
                 try
                 {
+                    var logFileName = $"logs/log-{DateTime.Today.ToShortDateString()}.txt";
                     Console.WriteLine(s);
                     File.AppendAllText(logFileName, s);
                 }
@@ -32,6 +31,12 @@ namespace ConfigImporter
             });
         }
 
+        /// <summary>
+        /// Получить значение ключа из appConfig и выбросить исключение, если его не найдено и задано имя ключа
+        /// </summary>
+        /// <param name="key">ключ</param>
+        /// <param name="keyNameForError">имя ключа для проброса ошибки</param>
+        /// <returns></returns>
         private static string GetConfig(string key, string keyNameForError = null)
         {
             var value = ConfigurationManager.AppSettings[key];
@@ -44,6 +49,10 @@ namespace ConfigImporter
             return value;
         }
 
+        /// <summary>
+        /// Получить имя среды от пользователя (из списка допустимых сред)
+        /// </summary>
+        /// <returns></returns>
         private static string GetCurrentStage()
         {
             var allowableStagesValue = GetConfig("allowableStages", "допустимые миры для импорта");
@@ -73,6 +82,11 @@ namespace ConfigImporter
             return currentStage;
         }
 
+        /// <summary>
+        /// Получить настройки подключения к консулу
+        /// </summary>
+        /// <param name="currentStage"></param>
+        /// <returns></returns>
         private static SdConfig GetSdConfigs(string currentStage)
         {
             var sdUrl = GetConfig($"sd.address.{currentStage}", $"адрес консула для мира : {currentStage}");
@@ -93,26 +107,17 @@ namespace ConfigImporter
             {
                 Logger($"Запускаем импорт в консул.");
 
-                var fileName = GetConfig("fileConfig.base.fileName", "имя файла для импорта");
-                var fileExt = GetConfig("fileConfig.base.ext", "расширение файла для импорта");
+                var fileForImportName = GetConfig("fileConfig.base.fileName", "имя файла для импорта");
+                var fileForImportExt = GetConfig("fileConfig.base.ext", "расширение файла для импорта");
 
                 var currentStage = GetCurrentStage();
                 var sdConfig = GetSdConfigs(currentStage);
 
-                var filePath = $"{fileName}.{fileExt}";
-                var fileStagePath = $"{fileName}.{currentStage}.{fileExt}";
-
-                if (!File.Exists(filePath))
-                {
-                    throw new Exception($"Не найден файл {filePath}.");
-                }
-
-                var baseValuesForImport = GetValuesFromFile(filePath);
-                var stageValuesForImport = GetValuesFromFile(fileStagePath);
+                var valuesForImport = GetValuesForImport(fileForImportName, fileForImportExt, currentStage);
 
                 try
                 {
-                    InitConfigs(sdConfig, baseValuesForImport, stageValuesForImport);
+                    ImportToSd(sdConfig, valuesForImport);
                     Logger($"Успешно импортировали конфиги в консул ({sdConfig.Url}{sdConfig.Prefix}).");
                 }
                 catch (Exception e)
@@ -129,6 +134,60 @@ namespace ConfigImporter
             Console.ReadLine();
         }
 
+        /// <summary>
+        /// Получить набор параметров для импорта в консул
+        /// </summary>
+        /// <param name="fileForImportName"></param>
+        /// <param name="fileForImportExt"></param>
+        /// <param name="currentStage"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetValuesForImport(string fileForImportName, string fileForImportExt, string currentStage)
+        {
+            var baseFilePathForImport = $"{fileForImportName}.{fileForImportExt}";
+            var stageFilePathForImport = $"{fileForImportName}.{currentStage}.{fileForImportExt}";
+
+            if (!File.Exists(baseFilePathForImport))
+            {
+                throw new Exception($"Не найден файл {baseFilePathForImport}.");
+            }
+
+            var baseValuesForImport = GetValuesFromFile(baseFilePathForImport);
+            var stageValuesForImport = GetValuesFromFile(stageFilePathForImport);
+
+            var values = new Dictionary<string, string>();
+
+            // заполняем набор значениями по-умолчанию (для всех сред)
+            foreach (var data in baseValuesForImport)
+            {
+                if (values.ContainsKey(data.Key))
+                {
+                    continue;
+                }
+
+                values.Add(data.Key, data.Value);
+            }
+
+            // переопределяем значения по-умолчанию на конкретные для этой среды
+            foreach (var data in stageValuesForImport)
+            {
+                if (values.ContainsKey(data.Key))
+                {
+                    values[data.Key] = data.Value;
+                }
+                else
+                {
+                    values.Add(data.Key, data.Value);
+                }
+            }
+
+            return values;
+        }
+
+        /// <summary>
+        /// Получить словарь значений из файла
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
         private static Dictionary<string, string> GetValuesFromFile(string filePath)
         {
             try
@@ -148,36 +207,11 @@ namespace ConfigImporter
             }
         }
 
-        private static void InitConfigs(SdConfig sdConfig, 
-            Dictionary<string, string> baseValuesForImport, IReadOnlyDictionary<string, string> stageValuesForImport)
-        {
-            var values = new Dictionary<string, string>();
-        
-            foreach (var data in baseValuesForImport)
-            {
-                if (values.ContainsKey(data.Key))
-                {
-                    continue;
-                }
-
-                values.Add(data.Key, data.Value);
-            }
-
-            foreach (var data in stageValuesForImport)
-            {
-                if (values.ContainsKey(data.Key))
-                {
-                    values[data.Key] = data.Value;
-                }
-                else
-                {
-                    values.Add(data.Key, data.Value);
-                }
-            }
-                
-            ImportToSd(sdConfig, values);
-        }
-
+        /// <summary>
+        /// Отправить в консул набор параметров
+        /// </summary>
+        /// <param name="sdConfig"></param>
+        /// <param name="values"></param>
         private static void ImportToSd(SdConfig sdConfig, Dictionary<string, string> values)
         {
             void ConfigurationWithToken(ConsulClientConfiguration config)
