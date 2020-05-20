@@ -90,7 +90,7 @@ namespace ConfigImporter
         private static SdConfig GetSdConfigs(string currentStage)
         {
             var sdUrl = GetConfig($"sd.address.{currentStage}", $"адрес консула для мира : {currentStage}");
-            var sdPrefix = GetConfig($"sd.prefix.{currentStage}", $"префикс для консула для мира : {currentStage}");
+            var sdPrefix = GetConfig($"sd.prefix.{currentStage}", $"префикс в консуле для мира : {currentStage}");
             var sdToken = GetConfig($"sd.token.{currentStage}");
 
             return new SdConfig
