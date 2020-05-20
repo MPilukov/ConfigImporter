@@ -12,44 +12,44 @@ namespace ConfigImporter
 {
     internal class Program
     {
-        private static Action<string> Logger = GetLogger();
+        private static readonly Action<string> Logger = GetLogger();
 
         private static Action<string> GetLogger()
         {
             var logFileName = $"logs/log-{DateTime.Today.ToShortDateString()}.txt";
-            return new Action<string>(s => File.AppendAllText(logFileName, ""));
+            return new Action<string>(s =>
+            {
+                try
+                {
+                    Console.WriteLine(s);
+                    File.AppendAllText(logFileName, s);
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine(s);
+                    Console.WriteLine($"При записи лога произошла ошибка : {exc}");
+                }
+            });
         }
 
-        private static string GetFileName()
+        private static string GetConfig(string key, string keyNameForError = null)
         {
-            var fileName = ConfigurationManager.AppSettings["fileConfig.base.fileName"];
+            var value = ConfigurationManager.AppSettings[key];
 
-            if (string.IsNullOrEmpty(fileName))
+            if (string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(keyNameForError))
             {
-                throw new Exception("Не указано имя файла для импорта");
+                throw new Exception($"Не указано : {keyNameForError}");
             }
 
-            return fileName;
-        }
-
-        private static string GetFileExt()
-        {
-            var fileExt = ConfigurationManager.AppSettings["fileConfig.base.ext"];
-
-            if (string.IsNullOrEmpty(fileExt))
-            {
-                throw new Exception("Не указано расширение файла для импорта");
-            }
-
-            return fileExt;
+            return value;
         }
 
         private static string GetCurrentStage()
         {
-            var allowableStagesValue = ConfigurationManager.AppSettings["allowableStages"];
-            var allowableStages = (allowableStagesValue ?? "").Split(',');
+            var allowableStagesValue = GetConfig("allowableStages", "допустимые миры для импорта");
+            var allowableStages = allowableStagesValue.Split(',');
             
-            if (string.IsNullOrEmpty(allowableStagesValue) || !allowableStages.Any())
+            if (!allowableStages.Any())
             {
                 throw new Exception("Не указаны допустимые миры для импорта");
             }
@@ -57,11 +57,12 @@ namespace ConfigImporter
             var currentStage = "";
             while (string.IsNullOrEmpty(currentStage))
             {
-                Console.Write($"Введите текущий мир для импорта ({allowableStagesValue}) : ");
+                Logger($"Введите текущий мир для импорта ({allowableStagesValue}) : ");
+
                 var stage = Console.ReadLine();
                 if (!allowableStages.Any(x => x.Equals(stage)))
                 {
-                    Console.WriteLine($"Не найден мир '{stage}' в списке доступимых для импорта : {allowableStagesValue}.");
+                    Logger($"Не найден мир '{stage}' в списке доступимых для импорта : {allowableStagesValue}.");
                 }
                 else
                 {
@@ -74,18 +75,9 @@ namespace ConfigImporter
 
         private static SdConfig GetSdConfigs(string currentStage)
         {
-            var sdUrl = ConfigurationManager.AppSettings[$"sd.address.{currentStage}"];
-            var sdPrefix = ConfigurationManager.AppSettings[$"sd.prefix{currentStage}"];
-            var sdToken = ConfigurationManager.AppSettings[$"sd.token.{currentStage}"];
-            
-            if (string.IsNullOrEmpty(sdUrl))
-            {
-                throw new Exception($"Не указан адрес консула для мира : {currentStage}");
-            }
-            if (string.IsNullOrEmpty(sdPrefix))
-            {
-                throw new Exception($"Не указан префикс для консула для мира : {currentStage}");
-            }
+            var sdUrl = GetConfig($"sd.address.{currentStage}", $"адрес консула для мира : {currentStage}");
+            var sdPrefix = GetConfig($"sd.prefix{currentStage}", $"префикс для консула для мира : {currentStage}");
+            var sdToken = GetConfig("sd.token.{currentStage}");
 
             return new SdConfig
             {
@@ -99,11 +91,10 @@ namespace ConfigImporter
         {
             try
             {
-                var logger = GetLogger();
-                Console.WriteLine($"Запускаем импорт в консул.");
+                Logger($"Запускаем импорт в консул.");
 
-                var fileName = GetFileName();
-                var fileExt = GetFileExt();
+                var fileName = GetConfig("fileConfig.base.fileName", "имя файла для импорта");
+                var fileExt = GetConfig("fileConfig.base.ext", "расширение файла для импорта");
 
                 var currentStage = GetCurrentStage();
                 var sdConfig = GetSdConfigs(currentStage);
@@ -122,7 +113,7 @@ namespace ConfigImporter
                 try
                 {
                     InitConfigs(sdConfig, baseValuesForImport, stageValuesForImport);
-                    Console.WriteLine($"Успешно импортировали конфиги в консул ({sdConfig.Url}{sdConfig.Prefix}).");
+                    Logger($"Успешно импортировали конфиги в консул ({sdConfig.Url}{sdConfig.Prefix}).");
                 }
                 catch (Exception e)
                 {
@@ -131,10 +122,10 @@ namespace ConfigImporter
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Произошла ошибка при импортировании конфигов в консул : {e.Message}.", e);
+                Logger($"Произошла ошибка при импортировании конфигов в консул : {e}.");
             }
 
-            Console.WriteLine($"Нажмите любую кнопку для завершения.");
+            Logger($"Нажмите любую кнопку для завершения.");
             Console.ReadLine();
         }
 
