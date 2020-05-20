@@ -19,9 +19,17 @@ namespace ConfigImporter
             {
                 try
                 {
-                    var logFileName = $"logs/log-{DateTime.Today.ToShortDateString()}.txt";
+                    var dirName = "logs";
+                    var logFileName = $"{dirName}/log-{DateTime.Today.ToShortDateString()}.txt";
+                    var now = DateTime.Now.ToString("HH:mm:ss");
                     Console.WriteLine(s);
-                    File.AppendAllText(logFileName, s);
+
+                    if (!Directory.Exists(dirName))
+                    {
+                        Directory.CreateDirectory(dirName);
+                    }
+
+                    File.AppendAllText(logFileName, $"{now} : {s}{Environment.NewLine}");
                 }
                 catch (Exception exc)
                 {
@@ -71,7 +79,7 @@ namespace ConfigImporter
                 var stage = Console.ReadLine();
                 if (!allowableStages.Any(x => x.Equals(stage)))
                 {
-                    Logger($"Не найден мир '{stage}' в списке доступимых для импорта : {allowableStagesValue}.");
+                    Logger($"Не найден мир '{stage}' в списке доступимых для импорта : {allowableStagesValue}");
                 }
                 else
                 {
@@ -105,7 +113,7 @@ namespace ConfigImporter
         {
             try
             {
-                Logger($"Запускаем импорт в консул.");
+                Logger($"Запускаем импорт в консул");
 
                 var fileForImportName = GetConfig("fileConfig.base.fileName", "имя файла для импорта");
                 var fileForImportExt = GetConfig("fileConfig.base.ext", "расширение файла для импорта");
@@ -118,19 +126,19 @@ namespace ConfigImporter
                 try
                 {
                     ImportToSd(sdConfig, valuesForImport);
-                    Logger($"Успешно импортировали конфиги в консул ({sdConfig.Url}{sdConfig.Prefix}).");
+                    Logger($"Успешно импортировали конфиги в консул ({sdConfig.Url}{sdConfig.Prefix})");
                 }
                 catch (Exception e)
                 {
-                    throw new Exception($"Произошла ошибка при импортировании конфигов в консул ({sdConfig.Url}{sdConfig.Prefix}) : {e.Message}.", e);
+                    throw new Exception($"Произошла ошибка при импортировании конфигов в консул ({sdConfig.Url}{sdConfig.Prefix}) : {e.Message}", e);
                 }
             }
             catch (Exception e)
             {
-                Logger($"Произошла ошибка при импортировании конфигов в консул : {e}.");
+                Logger($"Произошла ошибка при импортировании конфигов в консул : {e}");
             }
 
-            Logger($"Нажмите любую кнопку для завершения.");
+            Logger($"Нажмите любую кнопку для завершения");
             Console.ReadLine();
         }
 
@@ -148,7 +156,7 @@ namespace ConfigImporter
 
             if (!File.Exists(baseFilePathForImport))
             {
-                throw new Exception($"Не найден файл {baseFilePathForImport}.");
+                throw new Exception($"Не найден файл {baseFilePathForImport}");
             }
 
             var baseValuesForImport = GetValuesFromFile(baseFilePathForImport);
@@ -203,7 +211,7 @@ namespace ConfigImporter
             }
             catch (Exception e)
             {
-                throw new Exception($"Произошла ошибка при чтении конфигов из файла ({filePath}).", e);
+                throw new Exception($"Произошла ошибка при чтении конфигов из файла ({filePath})", e);
             }
         }
 
