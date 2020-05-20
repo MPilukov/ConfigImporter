@@ -12,17 +12,46 @@ namespace ConfigImporter
 {
     internal class Program
     {
-        private static readonly Action<string> Logger = GetLogger();
-        private static Action<string> GetLogger()
+        private static readonly Action<string, LogLevel> Logger = GetLogger();
+        private static ConsoleColor GetConsoleColor(LogLevel level)
         {
-            return new Action<string>(s =>
+            switch (level)
+            {
+                case LogLevel.Error:
+                    return ConsoleColor.Red;
+                case LogLevel.Info:
+                    return ConsoleColor.White;
+                case LogLevel.Success:
+                    return ConsoleColor.Green;
+                case LogLevel.Warning:
+                    return ConsoleColor.Blue;
+                default:
+                    return ConsoleColor.White;
+            }
+        }
+
+        private static void LogToConsole(string message, LogLevel level)
+        {
+            var color = GetConsoleColor(level);
+            if (Console.ForegroundColor != color)
+            {
+                Console.ForegroundColor = color;
+            }
+
+            Console.WriteLine(message);
+        }
+
+        private static Action<string, LogLevel> GetLogger()
+        {
+            return new Action<string, LogLevel>((s, l) =>
             {
                 try
                 {
+                    LogToConsole(s, l);
+
                     var dirName = "logs";
                     var logFileName = $"{dirName}/log-{DateTime.Today.ToShortDateString()}.txt";
                     var now = DateTime.Now.ToString("HH:mm:ss");
-                    Console.WriteLine(s);
 
                     if (!Directory.Exists(dirName))
                     {
@@ -33,8 +62,8 @@ namespace ConfigImporter
                 }
                 catch (Exception exc)
                 {
-                    Console.WriteLine(s);
-                    Console.WriteLine($"При записи лога произошла ошибка : {exc}");
+                    LogToConsole(s, l);
+                    LogToConsole($"При записи лога произошла ошибка : {exc}", LogLevel.Error);
                 }
             });
         }
@@ -74,12 +103,12 @@ namespace ConfigImporter
             var currentStage = "";
             while (string.IsNullOrEmpty(currentStage))
             {
-                Logger($"Введите текущий мир для импорта ({allowableStagesValue}) : ");
+                Logger($"Введите текущий мир для импорта ({allowableStagesValue}) : ", LogLevel.Info);
 
                 var stage = Console.ReadLine();
                 if (!allowableStages.Any(x => x.Equals(stage)))
                 {
-                    Logger($"Не найден мир '{stage}' в списке доступимых для импорта : {allowableStagesValue}");
+                    Logger($"Не найден мир '{stage}' в списке доступимых для импорта : {allowableStagesValue}", LogLevel.Error);
                 }
                 else
                 {
@@ -113,7 +142,7 @@ namespace ConfigImporter
         {
             try
             {
-                Logger($"Запускаем импорт в консул");
+                Logger($"Запускаем импорт в консул", LogLevel.Info);
 
                 var fileForImportName = GetConfig("fileConfig.base.fileName", "имя файла для импорта");
                 var fileForImportExt = GetConfig("fileConfig.base.ext", "расширение файла для импорта");
@@ -129,7 +158,7 @@ namespace ConfigImporter
                 try
                 {
                     ImportToSd(sdConfig, valuesForImport, showValues);
-                    Logger($"Успешно импортировали конфиги в консул ({sdConfig.Url}{sdConfig.Prefix})");
+                    Logger($"Успешно импортировали конфиги в консул ({sdConfig.Url}{sdConfig.Prefix})", LogLevel.Success);
                 }
                 catch (Exception e)
                 {
@@ -138,10 +167,10 @@ namespace ConfigImporter
             }
             catch (Exception e)
             {
-                Logger($"Произошла ошибка при импортировании конфигов в консул : {e}");
+                Logger($"Произошла ошибка при импортировании конфигов в консул : {e}", LogLevel.Error);
             }
 
-            Logger($"Нажмите любую кнопку для завершения");
+            Logger($"Нажмите любую кнопку для завершения", LogLevel.Info);
             Console.ReadLine();
         }
 
@@ -249,15 +278,17 @@ namespace ConfigImporter
 
                     if (showValues)
                     {
-                        Logger($"'{pair.Key}' = '{pair.Value}'");
+                        Logger($"'{pair.Key}' = '{pair.Value}'", LogLevel.Info);
                     }
                 }
             }
 
             if (showValues)
             {
-                Logger("Внимание! Обратите внимание, что вы выбрали конфигурацию, в которой все параметры, импортируемые в консул, сохраняются в логи");
-                Logger("Если вы переживаете за сохранность этих параметров, то рекомендуется очистить папку логов после завершения работы");
+                Logger("Внимание! Обратите внимание, что вы выбрали конфигурацию, в которой все параметры, импортируемые в консул, сохраняются в логи", 
+                    LogLevel.Warning);
+                Logger("Если вы переживаете за сохранность этих параметров, то рекомендуется очистить папку логов после завершения работы", 
+                    LogLevel.Warning);
             }
         }
     }
