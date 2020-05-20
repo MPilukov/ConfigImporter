@@ -118,6 +118,9 @@ namespace ConfigImporter
                 var fileForImportName = GetConfig("fileConfig.base.fileName", "имя файла для импорта");
                 var fileForImportExt = GetConfig("fileConfig.base.ext", "расширение файла для импорта");
 
+                var showValues = GetConfig("showValuesToClient", "разрешение демонстрировать значения параметров для импорта")
+                    .Equals("true", StringComparison.InvariantCultureIgnoreCase);
+
                 var currentStage = GetCurrentStage();
                 var sdConfig = GetSdConfigs(currentStage);
 
@@ -125,7 +128,7 @@ namespace ConfigImporter
 
                 try
                 {
-                    ImportToSd(sdConfig, valuesForImport);
+                    ImportToSd(sdConfig, valuesForImport, showValues);
                     Logger($"Успешно импортировали конфиги в консул ({sdConfig.Url}{sdConfig.Prefix})");
                 }
                 catch (Exception e)
@@ -220,7 +223,7 @@ namespace ConfigImporter
         /// </summary>
         /// <param name="sdConfig"></param>
         /// <param name="values"></param>
-        private static void ImportToSd(SdConfig sdConfig, Dictionary<string, string> values)
+        private static void ImportToSd(SdConfig sdConfig, Dictionary<string, string> values, bool showValues)
         {
             void ConfigurationWithToken(ConsulClientConfiguration config)
             {
@@ -243,7 +246,18 @@ namespace ConfigImporter
                     var p = new KVPair(sdConfig.Prefix + "/" + pair.Key) {Value = Encoding.UTF8.GetBytes(pair.Value)};
                     var ct = new CancellationToken();
                     kv.Put(p, ct).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                    if (showValues)
+                    {
+                        Logger($"'{pair.Key}' = '{pair.Value}'");
+                    }
                 }
+            }
+
+            if (showValues)
+            {
+                Logger("Внимание! Обратите внимание, что вы выбрали конфигурацию, в которой все параметры, импортируемые в консул, сохраняются в логи");
+                Logger("Если вы переживаете за сохранность этих параметров, то рекомендуется очистить папку логов после завершения работы");
             }
         }
     }
