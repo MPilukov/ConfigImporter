@@ -56,9 +56,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ConfigImporterExecuter\ConfigImporterExecuter.csproj">
+    <ProjectReference Include="..\ConfigImporterExecutor\ConfigImporterExecutor.csproj">
       <Project>{3b878250-5b33-466d-9285-68f644db3354}</Project>
-      <Name>ConfigImporterExecuter</Name>
+      <Name>ConfigImporterExecutor</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

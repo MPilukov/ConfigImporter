@@ -1,16 +1,16 @@
-﻿using ConfigImporterLogic;
-using Consul;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using ConfigImporterLogic;
+using Consul;
+using Newtonsoft.Json;
 
-namespace ConfigImporterExecuter
+namespace ConfigImporterExecutor
 {
-    public class ConfigImporterExecuter
+    public class ConfigImporterExecutor
     {
         private static readonly Action<string, ELogLevel> Logger = GetLogger();
         private static ConsoleColor GetConsoleColor(ELogLevel level)
@@ -43,13 +43,13 @@ namespace ConfigImporterExecuter
 
         private static Action<string, ELogLevel> GetLogger()
         {
-            return new Action<string, ELogLevel>((s, l) =>
+            return ((s, l) =>
             {
                 try
                 {
                     LogToConsole(s, l);
 
-                    var dirName = "logs";
+                    const string dirName = "logs";
                     var logFileName = $"{dirName}/log-{DateTime.Today.ToShortDateString()}.txt";
                     var now = DateTime.Now.ToString("HH:mm:ss");
 
@@ -76,8 +76,7 @@ namespace ConfigImporterExecuter
         /// <returns></returns>
         private static string GetConfig(string key, string keyNameForError = null)
         {
-            // var value = ConfigurationManager.AppSettings[key];
-            var value = GetConfigData(key);
+            var value = _getConfigData(key);
 
             if (string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(keyNameForError))
             {
@@ -139,12 +138,12 @@ namespace ConfigImporterExecuter
             };
         }
 
-        private static Func<string, string> GetConfigData;
+        private static Func<string, string> _getConfigData;
         public static void Run(Func<string, string> getConfig)
         {
             try
             {
-                GetConfigData = getConfig;
+                _getConfigData = getConfig;
 
                 Logger($"Запускаем импорт в консул", ELogLevel.Info);
 
@@ -256,6 +255,7 @@ namespace ConfigImporterExecuter
         /// </summary>
         /// <param name="sdConfig"></param>
         /// <param name="values"></param>
+        /// <param name="showValues"></param>
         private static void ImportToSd(SdConfig sdConfig, Dictionary<string, string> values, bool showValues)
         {
             void ConfigurationWithToken(ConsulClientConfiguration config)

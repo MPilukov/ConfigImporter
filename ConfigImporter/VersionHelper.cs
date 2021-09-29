@@ -14,7 +14,7 @@ namespace ConfigImporter
         {
             try
             {
-                var currectVesion = GetVersion();
+                var currentVersion = GetVersion();
                 var lastVersion = await GetLastVersion();
 
                 if (lastVersion == null)
@@ -22,13 +22,12 @@ namespace ConfigImporter
                     return;
                 }
 
-                if (lastVersion == null
-                    || string.IsNullOrWhiteSpace(currectVesion) 
-                    || !currectVesion.Equals(lastVersion.Name, StringComparison.InvariantCultureIgnoreCase))
+                if (string.IsNullOrWhiteSpace(currentVersion) ||
+                    !currentVersion.Equals(lastVersion.Name, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    trace($"Необходимо обновиться на более свежую версию : {lastVersion.Name}");
+                    trace($"You need to upgrade to a more recent version : {lastVersion.Name}");
                     await Update(lastVersion);
-                    trace($"Успешно обновились на более свежую версию : {lastVersion.Name}");
+                    trace($"Successfully upgraded to a more recent version : {lastVersion.Name}");
                 }
 
             }
@@ -38,10 +37,10 @@ namespace ConfigImporter
             }
         }
 
-        private async Task Update(TagData data)
+        private static async Task Update(TagData data)
         {
-            var dll = "https://github.com/MPilukov/ConfigImporter/raw/master/ConfigImporterExecuter/build/ConfigImporterExecuter.dll";
-            var pdb = "https://github.com/MPilukov/ConfigImporter/raw/master/ConfigImporterExecuter/build/ConfigImporterExecuter.pdb";
+            const string dll = "https://github.com/MPilukov/ConfigImporter/raw/master/ConfigImporterExecutor/build/ConfigImporterExecutor.dll";
+            const string pdb = "https://github.com/MPilukov/ConfigImporter/raw/master/ConfigImporterExecutor/build/ConfigImporterExecutor.pdb";
 
             using (var webClient = new WebClient())
             {
@@ -50,8 +49,8 @@ namespace ConfigImporter
                 var documentDllBody = await webClient.DownloadDataTaskAsync(dll);
                 var documentPdbBody = await webClient.DownloadDataTaskAsync(pdb);
 
-                var fileDll = "ConfigImporterExecuter.dll";
-                var filePdb = "ConfigImporterExecuter.pdb";
+                const string fileDll = "ConfigImporterExecutor.dll";
+                const string filePdb = "ConfigImporterExecutor.pdb";
 
                 var currentDir = Directory.GetCurrentDirectory();
 
@@ -71,11 +70,12 @@ namespace ConfigImporter
 
         private const string VersionFileName = "currentVersion.txt";
 
-        private void SaveVersion(string version)
+        private static void SaveVersion(string version)
         {
             File.WriteAllText(VersionFileName, version);
         }
-        public string GetVersion()
+
+        public static string GetVersion()
         {
             if (File.Exists(VersionFileName))
             {
@@ -85,9 +85,9 @@ namespace ConfigImporter
             return null;
         }
 
-        private async Task<TagData> GetLastVersion()
+        private static async Task<TagData> GetLastVersion()
         {            
-            var url = "https://api.github.com/repos/MPilukov/ConfigImporter/tags";
+            const string url = "https://api.github.com/repos/MPilukov/ConfigImporter/tags";
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 
             using (var client = new HttpClient())

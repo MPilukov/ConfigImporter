@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30104.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigImporter", "ConfigImporter\ConfigImporter.csproj", "{E9C1E935-0D4D-422E-B3B1-2F0571C7B37B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigImporterExecuter", "ConfigImporterExecuter\ConfigImporterExecuter.csproj", "{3B878250-5B33-466D-9285-68F644DB3354}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigImporterExecutor", "ConfigImporterExecutor\ConfigImporterExecutor.csproj", "{3B878250-5B33-466D-9285-68F644DB3354}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

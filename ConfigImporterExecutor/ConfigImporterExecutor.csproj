@@ -7,8 +7,8 @@
     <ProjectGuid>{3B878250-5B33-466D-9285-68F644DB3354}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ConfigImporterExecuter</RootNamespace>
-    <AssemblyName>ConfigImporterExecuter</AssemblyName>
+    <RootNamespace>ConfigImporterExecutor</RootNamespace>
+    <AssemblyName>ConfigImporterExecutor</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -49,7 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigImporterExecuter.cs" />
+    <Compile Include="ConfigImporterExecutor.cs" />
     <Compile Include="ELogLevel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SdConfig.cs" />
@@ -57,10 +57,9 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <Content Include="build\ConfigImporterExecuter.dll" />
-    <Content Include="build\ConfigImporterExecuter.pdb" />
+    <Content Include="build\ConfigImporterExecutor.dll" />
+    <Content Include="build\ConfigImporterExecutor.pdb" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace ConfigImporter
 {
-    public class Program
+    public static class Program
     {
         public static async Task Main(string[] args)
         {
@@ -13,26 +13,26 @@ namespace ConfigImporter
             {
                 var x = new VersionHelper();
                 await x.CheckUpdate(s=> Console.WriteLine(s + Environment.NewLine));
-                var version = x.GetVersion();
+                var version = VersionHelper.GetVersion();
 
-                StartExecuter(version);
+                StartExecutor(version);
             }
-            catch (Exception e)
+            catch (Exception exc)
             {
-                Console.WriteLine($"Ошибка при запуске импорта : {e}");
+                Console.WriteLine($"Error in import : {exc}");
             }
         }
 
-        private static void StartExecuter(string version)
+        private static void StartExecutor(string version)
         {
             var getConfig = new Func<string, string>(s => ConfigurationManager.AppSettings[s]);
 
             var currentPath = Directory.GetCurrentDirectory();
 
-            var assembly = System.Reflection.Assembly.LoadFile($"{currentPath}/ConfigImporterExecuter.dll");
-            var type = assembly.GetType("ConfigImporterExecuter.ConfigImporterExecuter");
+            var assembly = System.Reflection.Assembly.LoadFile($"{currentPath}/ConfigImporterExecutor.dll");
+            var type = assembly.GetType("ConfigImporterExecutor.ConfigImporterExecutor");
             var methodInfo = type.GetMethod("Run");
-            methodInfo.Invoke(null, new object[] { getConfig });
+            methodInfo?.Invoke(null, new object[] { getConfig });
         }
     }
 }
